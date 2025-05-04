@@ -1,0 +1,353 @@
+---
+title: "Untitled"
+output: pdf_document
+date: "2025-04-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+if(!require(bcf)) {
+  install.packages("bcf", repos="http://cran.us.r-project.org")
+}
+library(bcf)
+```
+
+```{r cars}
+generate_lh <- function(n) {
+  x1 <- rnorm(n)
+  x2 <- rnorm(n)
+  x3 <- rnorm(n)
+  x4 <- rbinom(n, 1, 0.5)
+  x5 <- sample(1:3, n, replace = TRUE)
+
+  g_func <- function(x4_val) {
+    ifelse(x4_val == 1, 2,
+           ifelse(x4_val == 2, -1, -4))
+  }
+
+  mu_lh <- 1 + g_func(x4) + x1 * x3
+  
+  s_mu_lh <- sd(mu_lh)
+  
+  u_lh <- runif(n)
+  
+  pi_x_lh <- 0.8 * pnorm((3 * mu_lh / s_mu_lh) - 0.5 * x1) + 0.05 + u_lh / 10
+  
+  Z_lh <- rbinom(n, 1, pi_x_lh)
+  
+  tau_lh <- rep(3, n)
+  
+  epsilon_lh <- rnorm(n)
+  
+  Y_lh <- mu_lh + tau_lh * Z_lh + epsilon_lh
+  
+  data_linear_homo <- data.frame(
+    Y = Y_lh,
+    Z = Z_lh,
+    x1 = x1,
+    x2 = x2,
+    x3 = x3,
+    x4 = x4,
+    x5 = x5,
+    mu = mu_lh,
+    tau = tau_lh,
+    pi_x = pi_x_lh
+  )
+  
+  return(data_linear_homo)
+}
+```
+```{r}
+generate_lhe <- function(n) {
+  x1 <- rnorm(n)
+  x2 <- rnorm(n)
+  x3 <- rnorm(n)
+  x4 <- rbinom(n, 1, 0.5)
+  x5 <- sample(1:3, n, replace = TRUE)
+
+  g_func <- function(x4_val) {
+    ifelse(x4_val == 1, 2,
+           ifelse(x4_val == 2, -1, -4))
+  }
+
+  mu_lhe <- 1 + g_func(x4) + x1 * x3
+  
+  s_mu_lhe <- sd(mu_lhe)
+  
+  u_lhe <- runif(n)
+  
+  pi_x_lhe <- 0.8 * pnorm((3 * mu_lhe / s_mu_lhe) - 0.5 * x1) + 0.05 + u_lhe / 10
+  
+  Z_lhe <- rbinom(n, 1, pi_x_lhe)
+  
+  tau_lhe <- 1 + 2 * x2 * x5
+  
+  epsilon_lhe <- rnorm(n)
+  
+  Y_lhe <- mu_lhe + tau_lhe * Z_lhe + epsilon_lhe
+
+  data_linear_hetero <- data.frame(
+    Y = Y_lhe,
+    Z = Z_lhe,
+    x1 = x1,
+    x2 = x2,
+    x3 = x3,
+    x4 = x4,
+    x5 = x5,
+    mu = mu_lhe,
+    tau = tau_lhe,
+    pi_x = pi_x_lhe
+  )
+
+  return(data_linear_hetero)
+}
+```
+
+```{r}
+generate_nlh <- function(n) {
+  x1 <- rnorm(n)
+  x2 <- rnorm(n)
+  x3 <- rnorm(n)
+  x4 <- rbinom(n, 1, 0.5)
+  x5 <- sample(1:3, n, replace = TRUE)
+
+  g_func <- function(x4_val) {
+    ifelse(x4_val == 1, 2,
+           ifelse(x4_val == 2, -1, -4))
+  }
+
+  mu_nlh <- -6 + g_func(x4) + 6 * abs(x3 - 1)
+  
+  s_mu_nlh <- sd(mu_nlh)
+  u_nlh <- runif(n)
+
+  pi_x_nlh <- 0.8 * pnorm((3 * mu_nlh / s_mu_nlh) - 0.5 * x1) + 0.05 + u_nlh / 10
+
+  Z_nlh <- rbinom(n, 1, pi_x_nlh)
+
+  tau_nlh <- rep(3, n)
+
+  epsilon_nlh <- rnorm(n)
+
+  Y_nlh <- mu_nlh + tau_nlh * Z_nlh + epsilon_nlh
+
+  data_nonlinear_homo <- data.frame(
+    Y = Y_nlh,
+    Z = Z_nlh,
+    x1 = x1,
+    x2 = x2,
+    x3 = x3,
+    x4 = x4,
+    x5 = x5,
+    mu = mu_nlh,
+    tau = tau_nlh,
+    pi_x = pi_x_nlh
+  )
+
+  return(data_nonlinear_homo)
+}
+```
+```{r}
+generate_nlhe <- function(n) {
+  x1 <- rnorm(n)
+  x2 <- rnorm(n)
+  x3 <- rnorm(n)
+  x4 <- rbinom(n, 1, 0.5)
+  x5 <- sample(1:3, n, replace = TRUE)
+
+  g_func <- function(x5_val) {
+    ifelse(x5_val == 1, 2,
+           ifelse(x5_val == 2, -1, -4))
+  }
+
+  mu_nlhe <- -6 + g_func(x5) + 6 * abs(x3 - 1)
+  
+  s_mu_nlhe <- sd(mu_nlhe)
+  u_nlhe <- runif(n)
+  
+  pi_x_nlhe <- 0.8 * pnorm((3 * mu_nlhe / s_mu_nlhe) - 0.5 * x1) + 0.05 + u_nlhe / 10
+  
+  Z_nlhe <- rbinom(n, 1, pi_x_nlhe)
+
+  tau_nlhe <- 1 + 2 * x2 * x5
+
+  epsilon_nlhe <- rnorm(n)
+  Y_nlhe <- mu_nlhe + tau_nlhe * Z_nlhe + epsilon_nlhe
+
+  data_nonlinear_hetero <- data.frame(
+    Y = Y_nlhe,
+    Z = Z_nlhe,
+    x1 = x1,
+    x2 = x2,
+    x3 = x3,
+    x4 = x4,
+    x5 = x5,
+    mu = mu_nlhe,
+    tau = tau_nlhe,
+    pi_x = pi_x_nlhe
+  )
+
+  return(data_nonlinear_hetero)
+}
+
+```
+```{r}
+LHE <- generate_lhe(250)
+```
+
+```{r}
+generate_lh(20)
+```
+
+```{r}
+n_rep <- 3
+results <- data.frame(
+  replicate = integer(),
+  scenario = character(),
+  method = character(),
+  RMSE = numeric(),
+  coverage = numeric(),
+  interval_length = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for(rep in 1:n_rep) {
+  print(paste("using seed", rep))
+  set.seed(rep)
+  print("iteration complete!!!!!")
+  sim_lin <- generate_lh(n=250)
+  data_lin <- sim_lin
+  tau_true_lin <- sim_lin$tau
+  
+  sim_nonlin <- generate_lhe(n=250)
+  data_nonlin <- sim_nonlin
+  tau_true_nonlin <- sim_nonlin$tau
+  
+  prop_model_lin <- glm(Z ~ x1 + x2 + x3 + x4 + x5, data=data_lin, family=binomial)
+  p_hat_lin <- predict(prop_model_lin, type="response")
+  
+  prop_model_nonlin <- glm(Z ~ x1 + x2 + x3 + x4 + x5, data=data_nonlin, family=binomial)
+  p_hat_nonlin <- predict(prop_model_nonlin, type="response")
+  
+  lin_model_lin <- lm(Y ~ Z + x1 + x2 + x3 + x4 + x5, data=data_lin)
+  lin_model_nonlin <- lm(Y ~ Z + x1 + x2 + x3 + x4 + x5, data=data_nonlin)
+  
+  coef_lin_lin <- summary(lin_model_lin)$coefficients["Z", ]
+  est_lin_lin <- coef_lin_lin["Estimate"]
+  se_lin_lin <- coef_lin_lin["Std. Error"]
+  ci_lin_lin <- est_lin_lin + c(-1.96, 1.96) * se_lin_lin
+  int_len_lin_lin <- ci_lin_lin[2] - ci_lin_lin[1]
+  
+  coef_lin_nonlin <- summary(lin_model_nonlin)$coefficients["Z", ]
+  est_lin_nonlin <- coef_lin_nonlin["Estimate"]
+  se_lin_nonlin <- coef_lin_nonlin["Std. Error"]
+  ci_lin_nonlin <- est_lin_nonlin + c(-1.96, 1.96) * se_lin_nonlin
+  int_len_lin_nonlin <- ci_lin_nonlin[2] - ci_lin_nonlin[1]
+  
+  tau_hat_lin_lin <- rep(est_lin_lin, length(tau_true_lin))
+  tau_hat_lin_nonlin <- rep(est_lin_nonlin, length(tau_true_nonlin))
+  
+  RMSE_lin_lin <- sqrt(mean((tau_hat_lin_lin - tau_true_lin)^2))
+  coverage_lin_lin <- mean(tau_true_lin >= ci_lin_lin[1] & tau_true_lin <= ci_lin_lin[2])
+  avg_len_lin_lin <- int_len_lin_lin
+  
+  RMSE_lin_nonlin <- sqrt(mean((tau_hat_lin_nonlin - tau_true_nonlin)^2))
+  coverage_lin_nonlin <- mean(tau_true_nonlin >= ci_lin_nonlin[1] & tau_true_nonlin <= ci_lin_nonlin[2])
+  avg_len_lin_nonlin <- int_len_lin_nonlin
+  
+  results <- rbind(results,
+                   data.frame(replicate=rep, scenario="Linear", method="LinearModel",
+                              RMSE=RMSE_lin_lin, coverage=coverage_lin_lin, interval_length=avg_len_lin_lin,
+                              stringsAsFactors=FALSE),
+                   data.frame(replicate=rep, scenario="Nonlinear", method="LinearModel",
+                              RMSE=RMSE_lin_nonlin, coverage=coverage_lin_nonlin, interval_length=avg_len_lin_nonlin,
+                              stringsAsFactors=FALSE))
+  
+  X5_2_lin <- as.numeric(data_lin$x5 == 2)
+  X5_3_lin <- as.numeric(data_lin$x5 == 3)
+  X_matrix_lin <- cbind(data_lin$x1, data_lin$x2, data_lin$x3, data_lin$x4, X5_2_lin, X5_3_lin)
+
+  X5_2_nonlin <- as.numeric(data_nonlin$x5 == 2)
+  X5_3_nonlin <- as.numeric(data_nonlin$x5 == 3)
+  X_matrix_nonlin <- cbind(data_nonlin$x1, data_nonlin$x2, data_nonlin$x3, data_nonlin$x4, X5_2_nonlin, X5_3_nonlin)
+
+  bcf_fit_lin <- bcf(y = data_lin$Y, z = data_lin$Z,
+                     x_control = X_matrix_lin, x_moderate = X_matrix_lin,
+                     pihat = p_hat_lin, nburn=4000, nsim=4000, include_pi="control", update_interval=100)
+  print("linear complete")
+
+  bcf_fit_nonlin <- bcf(y = data_nonlin$Y, z = data_nonlin$Z,
+                        x_control = X_matrix_nonlin, x_moderate = X_matrix_nonlin,
+                        pihat = p_hat_nonlin, nburn=4000, nsim=4000, include_pi="control", update_interval=100)
+  print("nonlinear complete")
+
+
+  tau_post_lin <- bcf_fit_lin$tau  
+  tau_post_nonlin <- bcf_fit_nonlin$tau
+
+  tau_hat_bcf_lin <- colMeans(tau_post_lin)
+  tau_hat_bcf_nonlin <- colMeans(tau_post_nonlin)
+
+  ci_lower_lin <- apply(tau_post_lin, 2, quantile, probs=0.025)
+  ci_upper_lin <- apply(tau_post_lin, 2, quantile, probs=0.975)
+  ci_lower_nonlin <- apply(tau_post_nonlin, 2, quantile, probs=0.025)
+  ci_upper_nonlin <- apply(tau_post_nonlin, 2, quantile, probs=0.975)
+
+  RMSE_bcf_lin <- sqrt(mean((tau_hat_bcf_lin - tau_true_lin)^2))
+  coverage_bcf_lin <- mean(tau_true_lin >= ci_lower_lin & tau_true_lin <= ci_upper_lin)
+  avg_len_bcf_lin <- mean(ci_upper_lin - ci_lower_lin)
+
+  RMSE_bcf_nonlin <- sqrt(mean((tau_hat_bcf_nonlin - tau_true_nonlin)^2))
+  coverage_bcf_nonlin <- mean(tau_true_nonlin >= ci_lower_nonlin & tau_true_nonlin <= ci_upper_nonlin)
+  avg_len_bcf_nonlin <- mean(ci_upper_nonlin - ci_lower_nonlin)
+
+  results <- rbind(results,
+                   data.frame(replicate=rep, scenario="Linear", method="BCF",
+                              RMSE=RMSE_bcf_lin, coverage=coverage_bcf_lin, interval_length=avg_len_bcf_lin,
+                              stringsAsFactors=FALSE),
+                   data.frame(replicate=rep, scenario="Nonlinear", method="BCF",
+                              RMSE=RMSE_bcf_nonlin, coverage=coverage_bcf_nonlin, interval_length=avg_len_bcf_nonlin,
+                              stringsAsFactors=FALSE))
+}
+
+summary_stats <- aggregate(cbind(RMSE, coverage, interval_length) ~ scenario + method,
+                            data=results, FUN=mean)
+# print(round(summary_stats, 3))
+```
+
+
+## Including Plots
+
+
+```{r pressure, echo=FALSE}
+data <- read.csv("C:\\Users\\marui\\Brown\\data2020\\summary_linear.csv")  
+
+par(mfrow = c(2, 2), mar = c(5, 4, 4, 2))  # Adjust margins if needed
+
+scenarios <- unique(data$scenario)
+
+for (s in scenarios) {
+  sub_data <- subset(data, scenario == s)
+  
+  metrics <- c("RMSE_ATE", "coverage_ATE", "interval_length_ATE")
+  values <- t(as.matrix(sub_data[, metrics]))
+  colnames(values) <- sub_data$method
+  barplot(values,
+          beside = TRUE,
+          main = paste("Scenario:", s),
+          ylab = "Value",
+          col = c("skyblue", "lightgreen", "salmon"),
+          legend.text = metrics,
+          args.legend = list(x = "topright", bty = "n"))
+}
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
