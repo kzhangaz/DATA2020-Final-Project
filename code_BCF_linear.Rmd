@@ -208,7 +208,7 @@ generate_lh(20)
 ```
 
 ```{r}
-n_rep <- 3
+n_rep <- 50
 results <- data.frame(
   replicate = integer(),
   scenario = character(),
@@ -281,12 +281,12 @@ for(rep in 1:n_rep) {
 
   bcf_fit_lin <- bcf(y = data_lin$Y, z = data_lin$Z,
                      x_control = X_matrix_lin, x_moderate = X_matrix_lin,
-                     pihat = p_hat_lin, nburn=4000, nsim=4000, include_pi="control", update_interval=100)
+                     pihat = p_hat_lin, nburn=2000, nsim=2000, include_pi="control", update_interval=100)
   print("linear complete")
 
   bcf_fit_nonlin <- bcf(y = data_nonlin$Y, z = data_nonlin$Z,
                         x_control = X_matrix_nonlin, x_moderate = X_matrix_nonlin,
-                        pihat = p_hat_nonlin, nburn=4000, nsim=4000, include_pi="control", update_interval=100)
+                        pihat = p_hat_nonlin, nburn=2000, nsim=2000, include_pi="control", update_interval=100)
   print("nonlinear complete")
 
 
